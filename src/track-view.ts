@@ -2,7 +2,7 @@ import { DiffableCollectionView } from "./base-ui/diffable-collection.js";
 import { Flow } from "./primitives/flow.js";
 import { gMouse, keysDown } from "./base-ui/mouse.js";
 import { Timeline, RawTrack, EventId, TrackId } from "./crud/timeline-crud.js";
-import { EditorModel } from "./timeline-model.js";
+import { EditorModel } from "./editor-model.js";
 import { EventView } from "./event-view.js";
 
 export class TrackView extends DiffableCollectionView<[RawTrack, Timeline], EventId> {

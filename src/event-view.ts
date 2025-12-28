@@ -1,7 +1,7 @@
 import { View } from "./base-ui/view.js";
 import { gMouse } from "./base-ui/mouse.js";
 import { Timeline, RawEventObj, EventId } from "./crud/timeline-crud.js";
-import { EditorModel } from "./timeline-model.js";
+import { EditorModel } from "./editor-model.js";
 
 export class EventView extends View<[RawEventObj, Timeline]> {
     private eventObj!: RawEventObj;

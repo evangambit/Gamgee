@@ -1,7 +1,7 @@
 import { StateFlow, context } from "./primitives/flow.js";
 import { TopBar, TopbarItem } from "./topbar.js";
-import { EditorView } from "./timeline-view.js";
-import { EditorModel } from "./timeline-model.js";
+import { EditorView } from "./editor-view.js";
+import { EditorModel } from "./editor-model.js";
 import { View } from "./base-ui/view.js";
 
 export enum TopLevelNavigationItemType {
