@@ -1,0 +1,29 @@
+{
+  "name": "typescript-website",
+  "version": "1.0.0",
+  "description": "A TypeScript website project",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && cp public/* dist/",
+    "dev": "concurrently \"tsc -w\" \"live-server dist\"",
+    "start": "live-server dist",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "live-server": "^1.2.2",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "typescript",
+    "website",
+    "frontend"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2"
+  }
+}
