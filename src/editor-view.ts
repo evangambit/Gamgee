@@ -1,25 +1,34 @@
 import { View } from "./base-ui/view.js";
-import { context } from "./primitives/flow.js";
-import { Timeline, TimelineEventType, RawEventObj } from "./crud/timeline-crud.js";
+import { context, Flow } from "./primitives/flow.js";
+import { Timeline, TimelineEventType, RawEventObj, EventId } from "./crud/timeline-crud.js";
 import { EditorModel } from "./editor-model.js";
 import { exportVideo } from "./export-video.js";
 import { CaptionEventView, VideoEventView } from "./event-view.js";
 import { TimelineView } from "./timeline-view.js";
 
-class EventViewer extends View<RawEventObj | null> {
+class EventViewer extends View<[null, null] | [EventId, TimelineEventType]> {
     constructor(model: EditorModel) {
-        super(model.getSelectedEventFlow().consume((event: RawEventObj | null) => {
+        const selectedEventFlow = model.getSelectedEventFlow();
+        const flow = selectedEventFlow.map((event: RawEventObj | null) => {
             if (event === null) {
+                return [null, null];
+            }
+            return [event.eventId, event.type] as [EventId, TimelineEventType];
+        }).distinctUntilChanged((a, b) => {
+            return a[0] === b[0] && a[1] === b[1];
+        });
+        super(flow.consume(([eventId, eventType]) => {
+            if (eventId === null || eventType === null) {
                 this.innerText = "No event selected";
                 return;
             }
             this.innerHTML = "";
-            switch (event.type) {
+            switch (eventType) {
                 case TimelineEventType.CAPTION:
-                    this.appendChild(new CaptionEventView(model, event.eventId));
+                    this.appendChild(new CaptionEventView(model, eventId));
                     break;
                 case TimelineEventType.VIDEO:
-                    this.appendChild(new VideoEventView(model, event.eventId));
+                    this.appendChild(new VideoEventView(model, eventId));
                     break;
             }
         }));

@@ -45,6 +45,12 @@ export class EventsAtTime extends Flow<Array<RawEventObj>> {
             }
             const value = this._value!;
             const time = this.timeFlow._value!;
+            const isInTime = event.value.start <= time && event.value.end >= time;
+            if (!isInTime) {
+                return;
+            }
+            const newValue = value.filter(e => e.eventId !== event.key).concat([event.value]);
+            this.setValue(newValue);
         };
     }
     _source_changed(): boolean {

@@ -9,6 +9,12 @@ export enum TimelineEventType {
 export class EventId extends String {}
 export class TrackId extends String {}
 
+export enum TextAlign {
+    LEFT = "left",
+    CENTER = "center",
+    RIGHT = "right",
+}
+
 export interface RawEventObj {
     eventId: EventId;
     name: string;
@@ -20,7 +26,9 @@ export interface RawEventObj {
 
 export interface RawCaptionEvent extends RawEventObj {
     type: TimelineEventType.CAPTION;
-    boundingBox: { x: number; y: number; width: number; height: number; };
+    textAlign: TextAlign;
+    fontSize: number;
+    center: [number, number];
 }
 
 export interface RawVideoEvent extends RawEventObj {
@@ -40,24 +48,23 @@ export interface Timeline {
     height: number;
 }
 
-
 export function computeCaptionBoundingBox(
-    ctx: CanvasRenderingContext2D,
-    event: RawCaptionEvent
+    event: RawCaptionEvent, ctx: CanvasRenderingContext2D
 ): { x: number; y: number; width: number; height: number } {
-    const canvas = ctx.canvas;
-    ctx.font = `${canvas.height * 0.1}px Arial`;
-    const width = ctx.measureText(event.name).width;
+    ctx.font = `${event.fontSize}px Arial`;
+    const lines = event.name.split('\n');
+    const width = Math.max(...lines.map(line => ctx.measureText(line).width));
+    const height = event.fontSize * lines.length;
     return {
-        x: canvas.width / 2 - width / 2,
-        y: canvas.height * 0.9 - (canvas.height * 0.1) / 2,
+        x: event.center[0] - width / 2,
+        y: event.center[1] - height / 2,
         width: width,
-        height: canvas.height * 0.1,
+        height: height,
     };
 }
 
 export class TimelineDB {
-    public events: CrudTable<EventId, RawEventObj> = new CrudTable();
+    public readonly events: CrudTable<EventId, RawEventObj> = new CrudTable();
     public readonly tracks: CrudTable<TrackId, RawTrack> = new CrudTable();
     public readonly event2Track: CrudTable<EventId, TrackId> = new CrudTable();
     public readonly trackArray: Array<RawTrack> = [];  // The order of the tracks (consistent with trackIndex).

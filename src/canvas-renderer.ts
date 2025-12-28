@@ -1,4 +1,4 @@
-import { TimelineEventType, computeCaptionBoundingBox, RawCaptionEvent, RawVideoEvent, RawEventObj, EventId } from "./crud/timeline-crud.js";
+import { TimelineEventType, computeCaptionBoundingBox, RawCaptionEvent, RawVideoEvent, RawEventObj, EventId, TextAlign } from "./crud/timeline-crud.js";
 
 export class CanvasRenderer {
     private videos: Map<string, HTMLVideoElement>;
@@ -12,24 +12,39 @@ export class CanvasRenderer {
         return new Promise((resolve) => {
             switch (event.type) {
                 case TimelineEventType.CAPTION:
-                    ctx.font = `${canvas.height * 0.1}px Arial`;
                     const captionEvent: RawCaptionEvent = <RawCaptionEvent> event;
-                    // Potentially (lazily) update bounding box.
-                    if (!captionEvent.boundingBox) {
-                        captionEvent.boundingBox = computeCaptionBoundingBox(ctx, captionEvent);
-                    }
-                    const boundingBox = captionEvent.boundingBox!;
-                    const x = boundingBox.x + boundingBox.width / 2;
-                    const y = boundingBox.y + boundingBox.height / 2;
-                    ctx.textAlign = 'center';
+                    const fontSize = captionEvent.fontSize;
+                    ctx.font = `${fontSize}px Arial`;
+                    const lines = captionEvent.name.split('\n');
+
+                    const lineWidths = lines.map(line => ctx.measureText(line).width);
+                    console.log('Line widths:', lineWidths);
+                    const widestLineWidth = Math.max(...lineWidths);
+
                     ctx.textBaseline = 'middle';
-                    // Drop shadow effect
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(captionEvent.name, x + 2, y + 1);
-                    ctx.fillStyle = 'black';
-                    ctx.fillText(captionEvent.name, x + 1, y + 2);
-                    ctx.fillStyle = 'white';
-                    ctx.fillText(captionEvent.name, x, y);
+                    for (let i = 0; i < lines.length; i++) {
+                        ctx.fillStyle = 'white';
+                        let dx = 0;
+                        switch (captionEvent.textAlign) {
+                            case TextAlign.LEFT:
+                                dx = 0;
+                                break;
+                            case TextAlign.CENTER:
+                                dx = (widestLineWidth - lineWidths[i]) / 2;
+                                break;
+                            case TextAlign.RIGHT:
+                                dx = widestLineWidth - lineWidths[i];
+                                break;
+                        }
+                        const x = Math.floor(captionEvent.center[0] - (widestLineWidth / 2) + dx);
+                        const y = Math.floor(captionEvent.center[1] - (lines.length - 1) * (fontSize / 2) + i * fontSize);
+
+                        ctx.fillStyle = 'black';
+                        ctx.fillText(lines[i], x + fontSize / 30, y + fontSize / 30);
+                        ctx.fillStyle = 'white';
+                        ctx.fillText(lines[i], x, y);
+                    }
+
                     resolve();
                     break;
                 case TimelineEventType.VIDEO:

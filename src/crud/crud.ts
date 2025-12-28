@@ -49,13 +49,14 @@ export class CrudTable<K, V> {
         if (!this.table.has(key)) {
             throw new Error(`Key ${key} does not exist in table`);
         }
+        const oldValue = this.table.get(key)!;
         this.table.set(key, value);
         if (transaction) {
             transaction.addCallback(() => {
-                this.updateEventer.dispatchEvent({ key, value, oldValue: this.table.get(key)! });
+                this.updateEventer.dispatchEvent({ key, value, oldValue: oldValue });
             });
         } else {
-            this.updateEventer.dispatchEvent({ key, value, oldValue: this.table.get(key)! });
+            this.updateEventer.dispatchEvent({ key, value, oldValue: oldValue });
         }
     }
 

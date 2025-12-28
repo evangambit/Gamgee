@@ -1,4 +1,4 @@
-import { Consumer, Flow } from "../primitives/flow.js";
+import { Consumer, context, Flow, NullConsumer } from "../primitives/flow.js";
 import { View } from "./view.js";
 
 export interface LevensteinOperation {
@@ -118,7 +118,7 @@ export class DiffableCollectionView<T, Row> extends View<T> {
         this.content.replaceChild(item2view(this.id2row.get(rowId)!), child);
       }
     };
-    super(consumer);
+    super(consumer || new NullConsumer<T>(context));
     this.collectionConsumer = items.map(arr => {
       for (const item of arr) {
         this.id2row.set(row2id(item), item);

@@ -220,6 +220,15 @@ export class Consumer<T> extends Flow<void> {
   }
 }
 
+export class NullConsumer<T> extends Consumer<T> {
+  constructor(context: Context) {
+    super(context, [], (value: T) => {}, "NullConsumer");
+  }
+  _source_changed(): boolean {
+    return false;
+  }
+}
+
 export class MapFlow<T, U> extends Flow<U> {
   _f: (value: T) => U;
   _source: Flow<T>;

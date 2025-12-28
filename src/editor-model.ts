@@ -2,12 +2,12 @@ import { Consumer, Flow, StateFlow, context } from "./primitives/flow.js";
 import { FrameProvider } from "./frame-provider.js";
 import { FlowSelector } from "./primitives/flow-selector.js";
 import { CanvasRenderer } from "./canvas-renderer.js";
-import { TimelineEventType, RawCaptionEvent, RawVideoEvent, RawEventObj, Timeline, TimelineDB, RawTrack, computeCaptionBoundingBox, TrackId, EventId } from "./crud/timeline-crud.js";
+import { TimelineEventType, RawCaptionEvent, RawVideoEvent, RawEventObj, Timeline, TimelineDB, RawTrack, computeCaptionBoundingBox, TrackId, EventId, TextAlign } from "./crud/timeline-crud.js";
 import { FlowifiedDb } from "./crud2flow/model2flow.js";
 import { EventsAtTime } from "./crud2flow/events-at-time.js";
 import { EventFlowProvider } from "./crud2flow/event-flow-provider.js";
 
-function copy<T>(obj: T): T {
+export function copy<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
@@ -119,9 +119,10 @@ export class EditorModel implements FrameProvider {
         const eventId = `event-${Math.random().toString(36)}`;
         const event: RawCaptionEvent = {
             eventId: eventId, name, start, end, resizable, type: TimelineEventType.CAPTION,
-            boundingBox: { x: 0, y: 0, width: 0, height: 0 }
+            center: [this.canvas.width / 2, this.canvas.height * 0.9],
+            fontSize: 24,
+            textAlign: TextAlign.CENTER,
         };
-        event.boundingBox = computeCaptionBoundingBox(this.canvas.getContext('2d')!, event);
         this.addEvent(event, trackId);
     }
 
@@ -244,7 +245,9 @@ export class EditorModel implements FrameProvider {
                     end: newEnd,
                     resizable: eventObj.resizable,
                     type: TimelineEventType.CAPTION,
-                    boundingBox: (eventObj as RawCaptionEvent).boundingBox,
+                    center: (eventObj as RawCaptionEvent).center,
+                    fontSize: (eventObj as RawCaptionEvent).fontSize,
+                    textAlign: (eventObj as RawCaptionEvent).textAlign,
                 };
                 break;
         }
@@ -298,7 +301,7 @@ export class EditorModel implements FrameProvider {
                 continue;
             }
             const captionEvent = event as RawCaptionEvent;
-            const box = captionEvent.boundingBox!;
+            const box = computeCaptionBoundingBox(captionEvent, this.canvas.getContext('2d')!);
             if (x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height) {
                 this.mouseTarget = event.eventId;
                 this.selectEvent(this.mouseTarget);
@@ -320,12 +323,10 @@ export class EditorModel implements FrameProvider {
                 .forEach(event => {
                     const captionEvent = event as RawCaptionEvent;
                     const newEvent: RawCaptionEvent = copy(captionEvent);
-                    newEvent.boundingBox = {
-                        x: captionEvent.boundingBox!.x + dx,
-                        y: captionEvent.boundingBox!.y + dy,
-                        width: captionEvent.boundingBox!.width,
-                        height: captionEvent.boundingBox!.height,
-                    };
+                    newEvent.center = [
+                        captionEvent.center[0] + dx,
+                        captionEvent.center[1] + dy,
+                    ];
                     this.db.updateEvent(newEvent);
                 });
         }

@@ -1,19 +1,15 @@
 import { Consumer } from "../primitives/flow.js";
 
 export class View<T> extends HTMLElement {
-  _consumer: Consumer<T> | undefined;
-  constructor(consumer: Consumer<T> | undefined) {
+  _consumer: Consumer<T>;
+  constructor(consumer: Consumer<T>) {
     super();
     this._consumer = consumer;
   }
   connectedCallback() {
-    if (this._consumer) {
-      this._consumer.turn_on();
-    }
+    this._consumer.turn_on();
   }
   disconnectedCallback() {
-    if (this._consumer) {
-      this._consumer.turn_off();
-    }
+    this._consumer.turn_off();
   }
 }

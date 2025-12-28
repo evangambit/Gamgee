@@ -1,7 +1,7 @@
 import { View } from "./base-ui/view.js";
 import { gMouse } from "./base-ui/mouse.js";
-import { Timeline, RawEventObj, EventId } from "./crud/timeline-crud.js";
-import { EditorModel } from "./editor-model.js";
+import { Timeline, RawEventObj, EventId, TextAlign, RawCaptionEvent } from "./crud/timeline-crud.js";
+import { copy, EditorModel } from "./editor-model.js";
 
 export class EventView extends View<[RawEventObj, Timeline]> {
     private eventObj!: RawEventObj;
@@ -84,9 +84,63 @@ customElements.define('event-view', EventView);
 
 export class CaptionEventView extends View<RawEventObj> {
     constructor(model: EditorModel, eventId: EventId) {
+        const textarea = document.createElement('textarea');
+        textarea.style.width = "100%";
+        textarea.style.height = "4em";
+        textarea.style.boxSizing = "border-box";
+        textarea.addEventListener('input', (e) => {
+            const event = copy(model.db.getEvent(eventId)!);
+            event.name = textarea.value;
+            model.db.updateEvent(event);
+        });
+
+        const alignPanel = document.createElement('div');
+        alignPanel.style.display = "flex";
+        alignPanel.style.flexDirection = "row";
+
+        const leftAlignButton = document.createElement('button');
+        leftAlignButton.innerText = "Left";
+        leftAlignButton.addEventListener('click', () => {
+            const event = copy(model.db.getEvent(eventId)!) as RawCaptionEvent;
+            event.textAlign = TextAlign.LEFT;
+            model.db.updateEvent(event);
+        });
+        alignPanel.appendChild(leftAlignButton);
+
+        const centerAlignButton = document.createElement('button');
+        centerAlignButton.innerText = "Center";
+        centerAlignButton.addEventListener('click', () => {
+            const event = copy(model.db.getEvent(eventId)!) as RawCaptionEvent;
+            event.textAlign = TextAlign.CENTER;
+            model.db.updateEvent(event);
+        });
+        alignPanel.appendChild(centerAlignButton);
+        
+        const rightAlignButton = document.createElement('button');
+        rightAlignButton.innerText = "Right";
+        rightAlignButton.addEventListener('click', () => {
+            const event = copy(model.db.getEvent(eventId)!) as RawCaptionEvent;
+            event.textAlign = TextAlign.RIGHT;
+            model.db.updateEvent(event);
+        });
+        alignPanel.appendChild(rightAlignButton);
+
+        const fontSizeInput = document.createElement('input');
+        fontSizeInput.type = "number";
+        fontSizeInput.min = "1";
+        fontSizeInput.addEventListener('input', () => {
+            const event = copy(model.db.getEvent(eventId)!) as RawCaptionEvent;
+            event.fontSize = parseInt(fontSizeInput.value, 10);
+            model.db.updateEvent(event);
+        });
+
         super(model.eventFlowProvider.getEventFlow(eventId).consume((eventObj) => {
-            this.innerText = `Caption Event: ${eventObj.name}`;
+            textarea.value = eventObj.name;
+            fontSizeInput.value = (eventObj as RawCaptionEvent).fontSize.toString();
         }));
+        this.appendChild(textarea);
+        this.appendChild(alignPanel);
+        this.appendChild(fontSizeInput);
     }
 }
 customElements.define('caption-event-view', CaptionEventView);
