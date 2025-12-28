@@ -206,9 +206,11 @@ export class Consumer<T> extends Flow<void> {
   }
   turn_on() {
     this._turn_on();
+    return this;
   }
   turn_off() {
     this._turn_off();
+    return this;
   }
   _source_changed(): boolean {
     try {

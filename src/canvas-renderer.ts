@@ -18,7 +18,6 @@ export class CanvasRenderer {
                     const lines = captionEvent.name.split('\n');
 
                     const lineWidths = lines.map(line => ctx.measureText(line).width);
-                    console.log('Line widths:', lineWidths);
                     const widestLineWidth = Math.max(...lineWidths);
 
                     ctx.textBaseline = 'middle';

@@ -20,6 +20,8 @@ export class EventView extends View<[RawEventObj, Timeline]> {
             this.style.left = `calc(${startPercent}%)`;
             this.style.width = `${endPercent - startPercent}%`;
             middle.innerText = eventObj.name;
+            leftEnd.style.display = eventObj.resizable ? "block" : "none";
+            rightEnd.style.display = eventObj.resizable ? "block" : "none";
         }));
         this.appendChild(leftEnd);
         this.appendChild(middle);

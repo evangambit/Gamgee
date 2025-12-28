@@ -40,6 +40,8 @@ export class EditorModel implements FrameProvider {
     private canvasFlow: StateFlow<HTMLCanvasElement> = context.create_state_flow<HTMLCanvasElement>(this.canvas);
     private canvasRenderer: CanvasRenderer;
 
+    private isPlayingConsumer: Consumer<boolean>;
+
     constructor(width: number, height: number) {
         this.timelineFlow = context.create_state_flow<Timeline>({
             duration: 30,
@@ -51,8 +53,10 @@ export class EditorModel implements FrameProvider {
         this.canvas.height = height;
         this.canvasRenderer = new CanvasRenderer(this.videos);
         this.addTrack();
-        this.addVideo('./simpsons.mp4').then(() => {
-            // TODO: set aspect ratio based on video.
+        this.addVideo('./simpsons.mp4').then((video: HTMLVideoElement) => {
+            const timeline = copy(this.timelineFlow.value);
+            timeline.duration = video.duration;
+            this.timelineFlow.value = timeline;
         });
 
         this.eventsAtCurrentTimeConsumer = this.currentTime.concat(this.currentEventsAtTime)
@@ -82,6 +86,25 @@ export class EditorModel implements FrameProvider {
             });
         });
         this.eventsAtCurrentTimeConsumer.turn_on();
+
+        let thread: number;
+        this.isPlayingConsumer = this.timelineFlow
+        .map(t => t.isPlaying)
+        .distinctUntilChanged((a, b) => a === b)
+        .consume((isPlaying: boolean) => {
+            if (isPlaying) {
+                thread = setInterval(() => {
+                    const timeline = this.timelineFlow.value;
+                    let newTime = this.currentTime.value + 1 / 30;
+                    if (newTime > timeline.duration) {
+                        newTime = 0;
+                    }
+                    this.setCurrentTime(newTime);
+                }, 1000 / 30);
+            } else {
+                clearInterval(thread);
+            }
+        }).turn_on();
     }
     getCurrentTimeFlow(): Flow<number> {
         return this.currentTime;
@@ -146,7 +169,7 @@ export class EditorModel implements FrameProvider {
                     videoSrc: src,
                     start: 0,
                     end: video.duration,
-                    resizable: true,
+                    resizable: false,
                     type: TimelineEventType.VIDEO,
                 }
                 this.addEvent(videoEvent, this.addTrack());
@@ -166,9 +189,18 @@ export class EditorModel implements FrameProvider {
      */
     moveEvent(eventId: EventId, deltaStart: number, deltaTrack: number, deltaDuration: number = 0) {
         const eventObj = this.db.getEvent(eventId);
+        if (eventObj.start + deltaStart < 0) {
+            deltaStart = -eventObj.start;
+        }
+
+        const timelineDuration = this.timelineFlow.value!.duration;
+        if (eventObj.end + deltaStart >= timelineDuration) {
+            deltaStart -= (eventObj.end + deltaStart) - timelineDuration;
+            deltaDuration -= (eventObj.end + deltaStart) - timelineDuration;
+        }
 
         // Desired new start and end times. We may need to adjust these to avoid overlaps.
-        let newStart = Math.max(0, eventObj.start + deltaStart);
+        let newStart = eventObj.start + deltaStart;
         let newEnd = Math.max(newStart, eventObj.end + deltaStart + deltaDuration);
 
         const currentTrackId = this.db.trackIdForEventId(eventId);
