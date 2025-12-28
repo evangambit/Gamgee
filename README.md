@@ -5,7 +5,19 @@ This project is an ode to
 
 2. Vanilla HTML/JavaScript.
 
-It's a demonstration that React through the baby out with the bath water whe it invented the virtual DOM.
+3. A rejection of the virtual DOM (the solution to a problem that React walked needlessly into).
+
+This project is non-trivial to demonstrate that this architecture works -- that you can have functional views without a virtual DOM.
+
+It also lets you caption GIFs.
+
+## Usage
+
+```
+$ npm run build
+
+$ python3 dev_server.py
+```
 
 ## Views
 
@@ -78,11 +90,3 @@ This project demonstrates that reactive programmming works perfectly well within
 a traditional DOM framework, with "diffing" happening completely naturally.
 
 ## Appendix
-
-Commands:
-
-```
-$ npm run build
-
-$ npm run dev
-```
