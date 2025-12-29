@@ -36,11 +36,87 @@ class EventViewer extends View<[null, null] | [EventId, TimelineEventType]> {
 }
 customElements.define('event-viewer', EventViewer);
 
+function disableUiForModal(): HTMLElement {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    overlay.style.zIndex = '1000';
+    overlay.style.pointerEvents = 'auto';
+    overlay.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    document.body.appendChild(overlay);
+
+    return overlay;
+}
+
+class ExportModal extends HTMLElement {
+    constructor(model: EditorModel, close: () => void) {
+        super();
+
+        this.style.display = 'flex';
+        this.style.flexDirection = 'column';
+        this.style.gap = '10px';
+        this.style.backgroundColor = 'white';
+        this.style.padding = '1em';
+        this.style.borderRadius = '0.5em';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.innerText = "Cancel";
+
+        const exportButton = document.createElement('button');
+        exportButton.innerText = "Start Export";
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.marginTop = '10px';
+        buttonContainer.appendChild(cancelButton);
+        buttonContainer.appendChild(exportButton);
+
+        const fpsLabel = document.createElement('label');
+        fpsLabel.innerText = "FPS: ";
+
+        const fpsInput = document.createElement('input');
+        fpsInput.type = 'number';
+        fpsInput.valueAsNumber = 30;
+
+        const fpsContainer = document.createElement('div');
+        fpsContainer.appendChild(fpsLabel);
+        fpsContainer.appendChild(fpsInput);
+
+        const progressBar = document.createElement('progress');
+        progressBar.style.width = '100%';
+        progressBar.max = 1;
+        progressBar.value = 0;
+        this.appendChild(progressBar);
+
+        exportButton.addEventListener('click', async () => {
+            cancelButton.disabled = true;
+            exportButton.disabled = true;
+            await exportVideo(model, fpsInput.valueAsNumber || 30, (progress: number) => {
+                progressBar.value = progress;
+            });
+            close();
+        });
+        cancelButton.addEventListener('click', () => {
+            close();
+        });
+
+        this.appendChild(fpsContainer);
+        this.appendChild(buttonContainer);
+    }
+}
+customElements.define('export-modal', ExportModal);
+
 class PlayButtonPanel extends View<[Timeline, number]> {
     constructor(model: EditorModel) {
         const playButton = document.createElement('button');
         const exportButton = document.createElement('button');
-        exportButton.innerText = "Export Timeline to JSON";
         const timeElement = document.createElement('div');
         super(model.getTimeline().concat(model.getCurrentTimeFlow()).consume(([timeline, currentTime]: [Timeline, number]) => {
             playButton.innerText = timeline.isPlaying ? "Pause" : "Play";
@@ -52,11 +128,17 @@ class PlayButtonPanel extends View<[Timeline, number]> {
         });
         exportButton.addEventListener('click', async () => {
             exportButton.disabled = true;
-            exportButton.innerText = "Exporting...";
-            exportVideo(model, /*fps=*/30).then(() => {
+            const overlay = disableUiForModal();
+            const modal = new ExportModal(model, () => {
+                overlay.remove();
                 exportButton.disabled = false;
-                exportButton.innerText = "Export";
             });
+            modal.style.position = 'fixed';
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
         });
         this.appendChild(playButton);
         this.appendChild(exportButton);

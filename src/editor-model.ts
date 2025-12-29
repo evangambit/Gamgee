@@ -302,7 +302,7 @@ export class EditorModel implements FrameProvider {
      * 
      * @param callback 
      */
-    async iterateFrames(callback: (time: number, canvas: HTMLCanvasElement) => void | Promise<void>, fps: number) {
+    async iterateFrames(callback: (time: number, duration: number, canvas: HTMLCanvasElement) => void | Promise<void>, fps: number) {
         const canvas = document.createElement('canvas');
         const timeline = this.timelineFlow.value!;
         canvas.width = timeline.width;
@@ -319,7 +319,7 @@ export class EditorModel implements FrameProvider {
                 time,
                 (eventId) => this.db.getTrack(this.db.trackIdForEventId(eventId))!.trackIndex
             );
-            await callback(time, canvas);
+            await callback(time, timeline.duration, canvas);
         }
     }
 

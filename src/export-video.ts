@@ -1,6 +1,9 @@
 import { FrameProvider } from "./frame-provider.js";
 
-export async function exportVideo(model: FrameProvider, fps: number = 30) {
+export async function exportVideo(model: FrameProvider, fps: number = 30, progressCallback?: (progress: number) => void): Promise<void> {
+    if (!progressCallback) {
+        progressCallback = (progress: number) => {};
+    }
     try {
         console.log('Starting export...');
         
@@ -27,6 +30,10 @@ export async function exportVideo(model: FrameProvider, fps: number = 30) {
         const ffmpeg = createFFmpeg({ 
             log: true,
             corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+            progress: ({ ratio }: { ratio: number }) => {
+                // Map FFmpeg progress (0.0 to 1.0) to second half of overall progress
+                progressCallback!(0.5 + ratio * 0.5);
+            }
         });
         console.log('FFmpeg instance created.');
         
@@ -37,13 +44,13 @@ export async function exportVideo(model: FrameProvider, fps: number = 30) {
         const frames: Uint8Array[] = [];
         
         // Collect all frames
-        await model.iterateFrames(async (time: number, canvas: HTMLCanvasElement) => {
-            console.log('Exporting frame at time', time);
+        await model.iterateFrames(async (time: number, duration: number, canvas: HTMLCanvasElement) => {
             const blob = await new Promise<Blob>((resolve) => {
                 canvas.toBlob((b) => resolve(b!), 'image/png');
             });
             const arrayBuffer = await blob.arrayBuffer();
             frames.push(new Uint8Array(arrayBuffer));
+            progressCallback(time / duration * 0.5); // First half progress for frame capture
         }, fps);
         
         console.log(`Captured ${frames.length} frames`);
