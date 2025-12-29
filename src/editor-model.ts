@@ -134,12 +134,12 @@ export class EditorModel implements FrameProvider {
         };
     }
     addTrack() {
-        const trackId = `track-${Math.random().toString(36)}`;
+        const trackId = `track-${Math.random().toString(36)}` as TrackId;
         this.db.addTrack(trackId);
         return trackId;
     }
     addCaption(trackId: TrackId, name: string, start: number, end: number, resizable: boolean) {
-        const eventId = `event-${Math.random().toString(36)}`;
+        const eventId = `event-${Math.random().toString(36)}` as EventId;
         const event: RawCaptionEvent = {
             eventId: eventId, name, start, end, resizable, type: TimelineEventType.CAPTION,
             center: [this.canvas.width / 2, this.canvas.height * 0.9],
@@ -164,7 +164,7 @@ export class EditorModel implements FrameProvider {
             video.oncanplay = () => {
                 video.oncanplay = null;
                 const videoEvent: RawVideoEvent = {
-                    eventId: `event-${Math.random().toString(36)}`,
+                    eventId: `event-${Math.random().toString(36)}` as EventId,
                     name: 'Video Event',
                     videoSrc: src,
                     start: 0,
@@ -195,8 +195,8 @@ export class EditorModel implements FrameProvider {
 
         const timelineDuration = this.timelineFlow.value!.duration;
         if (eventObj.end + deltaStart >= timelineDuration) {
-            deltaStart -= (eventObj.end + deltaStart) - timelineDuration;
             deltaDuration -= (eventObj.end + deltaStart) - timelineDuration;
+            deltaStart -= (eventObj.end + deltaStart) - timelineDuration;
         }
 
         // Desired new start and end times. We may need to adjust these to avoid overlaps.

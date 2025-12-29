@@ -1,17 +1,19 @@
 import { DiffableCollectionView } from "./base-ui/diffable-collection.js";
 import { keysDown } from "./base-ui/mouse.js";
-import { Timeline, TrackId } from "./crud/timeline-crud.js";
+import { EventId, Timeline, TrackId } from "./crud/timeline-crud.js";
 import { EditorModel } from "./editor-model.js";
 import { EventView } from "./event-view.js";
 import { TrackView } from "./track-view.js";
 
 export class TimelineView extends DiffableCollectionView<[number, Timeline, number], TrackId> {
     private timeline: Timeline | undefined;
+    private wheelHandler: (e: WheelEvent) => void;
+    private clickHandler: (e: MouseEvent) => void;
     constructor(model: EditorModel) {
         // We need tracks to share a cache of event views so that dragging an
         // event from one track to another reuses the same EventView instance.
         // Otherwise the user's drag will break when the event moves to a new track.
-        const eventViewCache: Map<string, EventView> = new Map();
+        const eventViewCache: Map<EventId, EventView> = new Map();
         const timeCursor = document.createElement('div');
         timeCursor.style.position = "absolute";
         timeCursor.style.top = "0";
@@ -36,7 +38,7 @@ export class TimelineView extends DiffableCollectionView<[number, Timeline, numb
         this.style.position = "relative";
         this.style.overflowY = 'auto';
 
-        window.addEventListener('wheel', (e) => {
+        this.wheelHandler = (e: WheelEvent) => {
             if (e.deltaY === 0) {
                 return;
             }
@@ -50,18 +52,28 @@ export class TimelineView extends DiffableCollectionView<[number, Timeline, numb
             } else {
                 model.zoomFlowState.value = zoom / 1.1;
             }
-        });
-        window.addEventListener('click', (e) => {
+        };
+        window.addEventListener('wheel', this.wheelHandler);
+        this.clickHandler = (e: MouseEvent) => {
             const rect = this.getBoundingClientRect();
             if (e.clientY < rect.top || e.clientY > rect.bottom) {
                 return;
             }
             const clickX = e.clientX - rect.left;
             const clickPercent = (clickX / rect.width);
-            const timeline = this.timeline!;
+            const timeline = this.timeline;
+            if (!timeline) {
+                return;
+            }
             const time = clickPercent * timeline.duration;
             model.setCurrentTime(time);
-        });
+        };
+        window.addEventListener('click', this.clickHandler);
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        window.removeEventListener('wheel', this.wheelHandler);
+        window.removeEventListener('click', this.clickHandler);
     }
 }
 customElements.define('timeline-view', TimelineView);

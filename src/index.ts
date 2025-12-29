@@ -65,7 +65,6 @@ function navStackToTopbarItems(
 
 class RootNav extends View<TopLevelNavigationItemBase | null> {
   constructor(stackFlow: StateFlow<Array<TopLevelNavigationItemBase>>) {
-    const topbar = new TopBar(stackFlow.map((navStack) => navStackToTopbarItems(navStack, stackFlow)));
     const lastItemFlow = (stackFlow).map(stack => stack.length > 0 ? stack[stack.length - 1] : null);
     const topBar = new TopBar(stackFlow.map((navStack) => navStackToTopbarItems(navStack, stackFlow)));
     super(lastItemFlow.consume((navItem) => {

@@ -14,6 +14,7 @@ export class FlowSelector<K, V> extends Flow<V | null> {
         const flow = this.func(this._sources[0]._value);
         if (this.consumer) {
             this.consumer.turn_off();
+            this.consumer = null;
         }
         if (flow === null) {
             this._value = null as any;
@@ -22,13 +23,13 @@ export class FlowSelector<K, V> extends Flow<V | null> {
         this.consumer = flow.consume((value: V) => {
             this._value = value;
             this._context.add_recently_updated(this);
-        });
-        this.consumer.turn_on();
+        }).turn_on();
         return false;
     }
     _becoming_cold(): void {
         if (this.consumer) {
             this.consumer.turn_off();
+            this.consumer = null;
         }
     }
 

@@ -6,8 +6,11 @@ export enum TimelineEventType {
 }
 
 
-export class EventId extends String {}
-export class TrackId extends String {}
+// export class EventId extends String {}
+// export class TrackId extends String {}
+
+export type EventId = string & { __eventIdBrand: never };
+export type TrackId = string & { __trackIdBrand: never };
 
 export enum TextAlign {
     LEFT = "left",
@@ -89,7 +92,7 @@ export class TimelineDB {
      */
     addTrack(trackId: TrackId, events: Array<RawEventObj> = []): RawTrack {
         const track: RawTrack = {
-            trackId: trackId as string,
+            trackId: trackId,
             trackIndex: this.trackArray.length,
         };
         this.trackArray.push(track);

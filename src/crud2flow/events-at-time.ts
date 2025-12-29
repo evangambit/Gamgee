@@ -6,7 +6,7 @@ export class EventsAtTime extends Flow<Array<RawEventObj>> {
     private db: TimelineDB;
     private timeFlow: Flow<number>;
     private onAddEvent: (event: AddTableRow<EventId, RawEventObj>) => void;
-    private onRemoveEvent: (event: RemoveTableRow<EventId>) => void;
+    private onRemoveEvent: (event: RemoveTableRow<EventId, RawEventObj>) => void;
     private onUpdateEvent: (event: UpdateTableRow<EventId, RawEventObj>) => void;
 
     constructor(db: TimelineDB, timeFlow: Flow<number>) {
@@ -26,7 +26,7 @@ export class EventsAtTime extends Flow<Array<RawEventObj>> {
                 this.setValue(value.concat([event.value]));
             }
         };
-        this.onRemoveEvent = (event: RemoveTableRow<EventId>) => {
+        this.onRemoveEvent = (event: RemoveTableRow<EventId, RawEventObj>) => {
             if (this._value === undefined) {
                 return;
             }
@@ -47,8 +47,11 @@ export class EventsAtTime extends Flow<Array<RawEventObj>> {
             const time = this.timeFlow._value!;
             const isInTime = event.value.start <= time && event.value.end >= time;
             if (!isInTime) {
+                // Remove if it exists
+                this.setValue(value.filter(e => e.eventId !== event.key));
                 return;
             }
+            // Replace or add
             const newValue = value.filter(e => e.eventId !== event.key).concat([event.value]);
             this.setValue(newValue);
         };

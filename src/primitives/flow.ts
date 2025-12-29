@@ -449,9 +449,6 @@ export class Context {
     if (this._isUpdating) {
       throw Error("already updating");
     }
-    if (this._isUpdating) {
-      return;
-    }
     this._isUpdating = true;
 
     // Steps:

@@ -120,6 +120,7 @@ export class DiffableCollectionView<T, Row> extends View<T> {
     };
     super(consumer || new NullConsumer<T>(context));
     this.collectionConsumer = items.map(arr => {
+      this.id2row.clear();
       for (const item of arr) {
         this.id2row.set(row2id(item), item);
       }

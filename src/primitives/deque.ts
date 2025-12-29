@@ -27,7 +27,7 @@ export class Deque<T> {
     if (this._length === this._data.length) {
       this._double_capacity();
     }
-    const i = (this._start + this._length) % this._data.length;;
+    const i = (this._start + this._length) % this._data.length;
     this._data[i] = value;
     ++this._length;
   }

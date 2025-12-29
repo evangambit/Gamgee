@@ -6,6 +6,7 @@ import { copy, EditorModel } from "./editor-model.js";
 export class EventView extends View<[RawEventObj, Timeline]> {
     private eventObj!: RawEventObj;
     private timeline!: Timeline;
+    private mouseMoveHandler: (e: MouseEvent) => void;
     constructor(model: EditorModel, eventId: EventId) {
         const leftEnd = document.createElement('div');
         const middle = document.createElement('div');
@@ -45,7 +46,7 @@ export class EventView extends View<[RawEventObj, Timeline]> {
         this.style.userSelect = "none";
         this.style.display = "flex";
 
-        window.addEventListener('mousemove', (e) => {
+        this.mouseMoveHandler = (e: MouseEvent) => {
             if (!gMouse.down) {
                 return;
             }
@@ -73,13 +74,18 @@ export class EventView extends View<[RawEventObj, Timeline]> {
             } else if (gMouse.downTarget === middle) {
                 model.moveEvent(eventId, dt, Math.round(dy));
             }
-        });
+        };
+        window.addEventListener('mousemove', this.mouseMoveHandler);
         this.addEventListener('click', (e) => {
             model.selectEvent(eventId);
         });
     }
     get trackRect() {
         return this.parentElement!.parentElement!.getBoundingClientRect();
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        window.removeEventListener('mousemove', this.mouseMoveHandler);
     }
 }
 customElements.define('event-view', EventView);

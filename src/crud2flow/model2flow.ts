@@ -12,7 +12,7 @@ export class FlowifiedDb {
     
     addEventToTrackHandler: (event: AddTableRow<EventId, TrackId>) => void;
     moveEventToTrackHandler: (event: UpdateTableRow<EventId, TrackId>) => void;
-    removeEventFromTrackHandler: (event: RemoveTableRow<EventId>) => void;
+    removeEventFromTrackHandler: (event: RemoveTableRow<EventId, TrackId>) => void;
     constructor(db: TimelineDB) {
         this.db = db;
         this.trackIds = context.create_state_flow<Array<TrackId>>(db.getTracksArray().map(t => t.trackId));
@@ -31,10 +31,10 @@ export class FlowifiedDb {
             }
         };
         db.event2Track.addEventer.addEventListener(this.addEventToTrackHandler);
-        this.removeEventFromTrackHandler = (event: RemoveTableRow<EventId>) => {
-            if (this.eventsForTrackFlows.has(event.key)) {
-                const trackFlow = this.eventsForTrackFlows.get(event.key)!;
-                trackFlow.value = this.db.getEventIdsOnTrack(event.key);
+        this.removeEventFromTrackHandler = (event: RemoveTableRow<EventId, TrackId>) => {
+            if (this.eventsForTrackFlows.has(event.value)) {
+                const trackFlow = this.eventsForTrackFlows.get(event.value)!;
+                trackFlow.value = this.db.getEventIdsOnTrack(event.value);
             }
         };
         db.event2Track.removeEventer.addEventListener(this.removeEventFromTrackHandler);

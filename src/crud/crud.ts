@@ -23,8 +23,9 @@ export interface UpdateTableRow<K, V> {
     oldValue: V;
 }
 
-export interface RemoveTableRow<K> {
+export interface RemoveTableRow<K, V> {
     key: K;
+    value: V;
 }
 
 export class CrudTable<K, V> {
@@ -32,7 +33,7 @@ export class CrudTable<K, V> {
 
     public addEventer: Eventer<AddTableRow<K, V>> = new Eventer();
     public updateEventer: Eventer<UpdateTableRow<K, V>> = new Eventer();
-    public removeEventer: Eventer<RemoveTableRow<K>> = new Eventer();
+    public removeEventer: Eventer<RemoveTableRow<K, V>> = new Eventer();
 
     add(key: K, value: V, transaction: CrudTransaction | null = null) {
         this.table.set(key, value);
@@ -61,13 +62,14 @@ export class CrudTable<K, V> {
     }
 
     remove(key: K, transaction: CrudTransaction | null = null) {
+        const value = this.table.get(key)!;
         this.table.delete(key);
         if (transaction) {
             transaction.addCallback(() => {
-                this.removeEventer.dispatchEvent({ key });
+                this.removeEventer.dispatchEvent({ key, value: value! });
             });
         } else {
-            this.removeEventer.dispatchEvent({ key });
+            this.removeEventer.dispatchEvent({ key, value: value! });
         }
     }
 

@@ -7,7 +7,7 @@ export class EventFlowProvider {
     eventFlows: Map<EventId, StateFlow<RawEventObj>> = new Map();
 
     addEventHandler: (event: AddTableRow<EventId, RawEventObj>) => void;
-    removeEventHandler: (event: RemoveTableRow<EventId>) => void;
+    removeEventHandler: (event: RemoveTableRow<EventId, RawEventObj>) => void;
     updateEventHandler: (event: UpdateTableRow<EventId, RawEventObj>) => void;
 
     constructor(db: TimelineDB) {
@@ -21,10 +21,10 @@ export class EventFlowProvider {
         };
         db.events.addEventer.addEventListener(this.addEventHandler);
 
-        this.removeEventHandler = (event: RemoveTableRow<EventId>) => {
+        this.removeEventHandler = (event: RemoveTableRow<EventId, RawEventObj>) => {
             if (this.eventFlows.has(event.key)) {
-                const flow = this.eventFlows.get(event.key)!;
-                flow.value = undefined as any;
+                this.eventFlows.delete(event.key);
+                // TODO: set value to undefined?
             }
         };
         db.events.removeEventer.addEventListener(this.removeEventHandler);
